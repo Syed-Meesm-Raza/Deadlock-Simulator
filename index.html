@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deadlock Simulator</title>
+    <link rel="stylesheet" href="style.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script></head>
+<body>
+
+    <header><br>
+        <h1>DEADLOCK_SIMULATOR</h1>
+        <p class="terminal-sub">[ OS Resource Management & Recovery Engine ]</p>
+    </header>
+</head>
+
+    <main class="container">
+        
+        <!-- 🟦 SECTION 1: CONFIGURATION & INPUT -->
+        <section class="card input-section">
+            <h2>1. System Configuration</h2>
+            <div class="config-row">
+                <div class="input-group">
+                    <label>Number of Processes (N):</label>
+                    <!-- Change value to 5 -->
+                    <input type="number" id="numProcesses" value="3" min="1" max="20">
+                </div>
+                <div class="input-group">
+                    <label>Number of Resources (M):</label>
+                    <!-- Change value to 3 -->
+                    <input type="number" id="numResources" value="2" min="1" max="10">
+                </div>
+                <button id="generateBtn" class="secondary-btn">Generate Matrices</button>
+            </div>
+
+            <div id="dynamicInputs" class="hidden">
+                <hr class="divider">
+                <div class="input-group">
+                    <h3>Total Instances </h3>
+                    <div class="vector-inputs" id="totalInstancesContainer"></div>
+                </div>
+                <div class="matrix-container">
+                    <div class="matrix-box"><br>
+                        <h3>Already Allocated Matrix</h3>
+                        <table id="allocationTable">
+                            <thead id="allocThead"></thead>
+                            <tbody id="allocTbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="matrix-box"><br>
+                        <h3>Maximum Matrix</h3>
+                        <table id="maxTable">
+                            <thead id="maxThead"></thead>
+                            <tbody id="maxTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <button id="simulateBtn" class="primary-btn">Simulate</button>
+                <p id="errorMsg" class="error-msg"></p>
+            </div>
+        </section>
+
+        <!-- RESULTS CONTAINER -->
+        <div id="resultsContainer" class="hidden">
+
+            <!-- 🟩 SECTION 2: COMPUTED TABLES -->
+            <section class="card">
+                <h2>2. Computed System State</2>
+                <div class="matrix-container">
+                    <div class="matrix-box">
+                        <h3>Available Resources</h3>
+                        <div class="vector-display" id="availableVector">[ - ]</div>
+                    </div>
+                    <div class="matrix-box">
+                        <h3>Need Matrix (Max - Already Allocated)</h3>
+                        <table id="needTable">
+                            <thead id="needThead"></thead>
+                            <tbody id="needTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 🟨 SECTION 3: BANKER SIMULATION -->
+            <section class="card" id="safeSection">
+                <h2>3. Banker's Algorithm Execution</h2>
+                <div class="status-badge" id="statusBadge">Status: Evaluating...</div>
+                <p><strong>Safe Sequences:</strong></p>
+                
+                <div id="safeSequenceDisplay"></div>
+                <button id="toggleOtherSeqBtn" class="secondary-btn" style="margin-top: 10px;">Other Safe Sequences</button>
+                <div id="otherSequencesList" class="hidden" style="margin-top: 10px; padding: 10px; background-color: #f9fafb; border-radius: 6px;"></div><br>
+
+                <br>
+                <h3>Execution Cycle Table</h3>
+                <table class="cycle-table">
+                    <thead>
+                        <tr>
+                            <th>Cycle</th>
+                            <th>Process</th>
+                            <th>Need</th>
+                            <th>Available (Before)</th>
+                            <th>Status</th>
+                            <th>Available (After)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cycleTableBody"></tbody>
+                </table>
+            </section>
+
+            <!-- 🟥 SECTION 4: DEADLOCK ANALYSIS -->
+            <section class="card hidden" id="deadlockSection">
+                <h2>4. Deadlock Analysis</h2>
+                <div class="status-badge unsafe">Status: UNSAFE (Potential Deadlock)</div>
+                <div class="deadlock-grid">
+                    <div class="rag-placeholder">
+                        <h3>Resource Allocation Graph (RAG)</h3>
+                        <div id="ragCanvas" class="rag-box"></div> <!-- SVG injected here -->
+                    </div>
+                    <div class="deadlock-info">
+                        <h3>Deadlock Cycle Detected</h3>
+                        <p id="deadlockCycleText">-</p>
+                        <h3>Deadlocked Processes</h3>
+                        <p id="deadlockedProcesses">-</p>
+                        <div class="explanation-box">
+                            <strong>Explanation:</strong>
+                            <p id="deadlockExplanation">Processes are in a circular wait condition. Neither can release resources until completion.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 🟪 SECTION 5: RECOVERY -->
+            <section class="card hidden" id="recoverySection">
+                <h2>5. Recovery Phase</h2>
+                <p>Select a deadlocked process to apply recovery:</p>
+                <div class="recovery-actions">
+                    <select id="recoveryTarget" class="recovery-select"></select>
+                    <button class="secondary-btn" id="btnKill">Kill Process</button>
+                    <button class="secondary-btn" id="btnPreempt">Preempt Resource</button>
+                </div>
+                <div id="recoveryResult" class="hidden recovery-success">
+                    <h3>Post-Recovery State</h3>
+                    <p><strong>Action Taken:</strong> <span id="recoveryActionText">-</span></p>
+                    <p><strong>New Available Vector:</strong> <span id="newAvailable">-</span></p>
+                    <p><strong>New Safe Sequence:</strong> <span id="newSafeSequence">-</span></p>
+                </div>
+            </section>
+
+            <!-- 🧾 SECTION 6: SIMULATION LOG -->
+            <section class="card">
+                <h2 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+                    6. Simulation Log
+                    <button id="toggleLogBtn" class="secondary-btn" style="padding: 4px 10px; font-size: 0.8rem; width: auto; margin: 0;">Show Log</button>
+                </h2>
+                <div class="log-box hidden" id="simulationLog">
+                    <p>> System initialized....</p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script src="state.js"></script>
+    <script src="rag.js"></script>
+    <script src="algorithms.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
