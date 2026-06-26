@@ -73,7 +73,7 @@
         The structural layout of the UI dashboard.
 
     style.css
-        The dark terminal theme, responsive design, and layout styling.
+        The light terminal theme, responsive design, and layout styling.
 
     state.js
         Global state variables, DOM element references, and utility functions (logging).
